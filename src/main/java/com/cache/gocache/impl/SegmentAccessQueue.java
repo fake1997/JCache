@@ -1,12 +1,13 @@
-package com.cache.quickcache.impl;
+package com.cache.gocache.impl;
 
-import com.cache.quickcache.AbstractDeque;
+import com.cache.gocache.AbstractDeque;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class SegmentAccessQueue extends AbstractDeque<HashCacheEntry> {
+    final HashCacheEntry head = new HeadHashCacheEntry();
+
     @Override
     public boolean offerFirst(HashCacheEntry entry) {
         if (entry == null) {
@@ -152,9 +153,6 @@ public class SegmentAccessQueue extends AbstractDeque<HashCacheEntry> {
         }
         return size;
     }
-
-    final HashCacheEntry head = new HeadHashCacheEntry();
-
 
     void connectAccessOrder(HashCacheEntry previous, HashCacheEntry next) {
         previous.setNextInAccessQueue(next);

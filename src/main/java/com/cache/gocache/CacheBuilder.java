@@ -1,6 +1,6 @@
-package com.cache.quickcache;
+package com.cache.gocache;
 
-import com.cache.quickcache.impl.CacheImpl;
+import com.cache.gocache.impl.CacheImpl;
 
 import java.io.Serializable;
 import java.util.ArrayList;

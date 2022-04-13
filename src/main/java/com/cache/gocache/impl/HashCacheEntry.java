@@ -1,8 +1,8 @@
-package com.cache.quickcache.impl;
+package com.cache.gocache.impl;
 
-import com.cache.quickcache.CacheEntry;
-import com.cache.quickcache.ExpirationPolicy;
-import com.cache.quickcache.TimeHelper;
+import com.cache.gocache.CacheEntry;
+import com.cache.gocache.ExpirationPolicy;
+import com.cache.gocache.TimeHelper;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;

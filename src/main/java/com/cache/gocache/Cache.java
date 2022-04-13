@@ -1,4 +1,4 @@
-package com.cache.quickcache;
+package com.cache.gocache;
 
 import java.io.Serializable;
 import java.util.Map;

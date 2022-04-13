@@ -240,12 +240,12 @@ public class StorageManager implements IStorageBlock{
         throw new IllegalStateException("Not Implemented!");
     }
 
-    public Queue<IStorageBlock> getUsedBlocks() {
-        return usedBlocks;
+    public int getUsedBlockCount() {
+        return usedBlocks.size();
     }
 
-    public Queue<IStorageBlock> getFreeBlocks() {
-        return freeBlocks;
+    public int getFreeBlockCount() {
+        return freeBlocks.size();
     }
 
     public Set<IStorageBlock> getAllInUsedBlocks(){

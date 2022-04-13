@@ -1,4 +1,4 @@
-package com.cache.quickcache;
+package com.cache.gocache;
 
 public class ExpirationPolicy {
     long afterAccess = -1L;

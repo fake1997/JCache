@@ -1,7 +1,7 @@
-package com.cache.quickcache.store;
+package com.cache.gocache.store;
 
 import com.cache.bigcache.BigCache;
-import com.cache.quickcache.*;
+import com.cache.gocache.*;
 
 import java.io.IOException;
 import java.io.Serializable;

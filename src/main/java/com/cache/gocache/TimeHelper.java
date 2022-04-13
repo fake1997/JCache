@@ -1,4 +1,4 @@
-package com.cache.quickcache;
+package com.cache.gocache;
 
 public class TimeHelper {
     public static long nowMs(){

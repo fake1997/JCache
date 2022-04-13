@@ -13,7 +13,7 @@ public class StorageBlock implements IStorageBlock{
     private final int capacity;
 
     /** the underlying storage */
-    private IStorage underlyingStorage; // 指向free block pool
+    private IStorage underlyingStorage;
 
     /** the offset within the storage block. */
     private final AtomicInteger currentOffset = new AtomicInteger(0);

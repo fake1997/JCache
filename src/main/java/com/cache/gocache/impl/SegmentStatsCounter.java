@@ -1,6 +1,6 @@
-package com.cache.quickcache.impl;
+package com.cache.gocache.impl;
 
-import com.cache.quickcache.CacheStats;
+import com.cache.gocache.CacheStats;
 
 public class SegmentStatsCounter {
     volatile long hitCount;

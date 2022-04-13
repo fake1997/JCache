@@ -1,11 +1,7 @@
-package com.cache.quickcache.impl;
+package com.cache.gocache.impl;
 
-import com.cache.quickcache.BehindStore;
-import com.cache.quickcache.CacheStats;
-import com.cache.quickcache.CacheStore;
-import com.cache.quickcache.ExpirationPolicy;
-import com.cache.quickcache.Cache.AccessLevel;
-import com.cache.quickcache.Cache.UpdateTimestamp;
+import com.cache.gocache.*;
+import com.cache.gocache.Cache.AccessLevel;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;
@@ -48,7 +44,9 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
         this.writeBehindStores.addAll(writeBehindStores);
 
         int cap = 2;
-        while (cap < initCapacity) cap = cap << 1;
+        while (cap < initCapacity) {
+            cap = cap << 1;
+        }
 
         table = new HashCacheEntry[cap];
 
@@ -56,7 +54,7 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
         this.threshold = (int) (cap * this.loadFactor);
     }
 
-    public V get(int hash, K key, AccessLevel level, UpdateTimestamp strategy) {
+    public V get(int hash, K key, Cache.AccessLevel level, Cache.UpdateTimestamp strategy) {
 
         if (!tryLock()) {
             scanAndLock(key, hash);
@@ -217,10 +215,11 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
                 accessQueue.addLast(e);
 
                 int c = count + 1;
-                if (c > threshold && tab.length < MAXIMUM_CAPACITY)
+                if (c > threshold && tab.length < MAXIMUM_CAPACITY) {
                     rehash(e);
-                else
+                } else {
                     setEntryAt(tab, index, e);
+                }
 
                 ++modCount;
                 count = c;
@@ -267,8 +266,9 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
                 HashCacheEntry<K, V> next = e.next;
                 int idx = e.hash & sizeMask;
                 if (next == null)   //  Single node on list
+                {
                     newTable[idx] = e;
-                else { // Reuse consecutive sequence at same slot
+                } else { // Reuse consecutive sequence at same slot
                     HashCacheEntry<K, V> lastRun = e;
                     int lastIdx = idx;
                     for (HashCacheEntry<K, V> last = next; last != null; last = last.next) {
@@ -318,12 +318,15 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
             if (retries < 0) {
                 if (e == null) {
                     if (node == null) // speculatively create node
+                    {
                         node = new HashCacheEntry<K, V>(hash, key, value, expirationPolicy);
+                    }
                     retries = 0;
-                } else if (Objects.deepEquals(key, e.key))
+                } else if (Objects.deepEquals(key, e.key)) {
                     retries = 0;
-                else
+                } else {
                     e = e.next;
+                }
             } else if (++retries > MAX_SCAN_RETRIES) {
                 lock();
                 break;
@@ -351,10 +354,11 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
         while (!tryLock()) {
             HashCacheEntry<K, V> f;
             if (retries < 0) {
-                if (e == null || Objects.deepEquals(key, e.key))
+                if (e == null || Objects.deepEquals(key, e.key)) {
                     retries = 0;
-                else
+                } else {
                     e = e.next;
+                }
             } else if (++retries > MAX_SCAN_RETRIES) {
                 lock();
                 break;
@@ -455,7 +459,9 @@ public class CacheSegment<K extends Serializable, V extends Serializable> extend
                 }
             }
         } finally {
-            if (oldValue != null) removeFromWBStores(key);
+            if (oldValue != null) {
+                removeFromWBStores(key);
+            }
             tryClean();
             unlock();
         }

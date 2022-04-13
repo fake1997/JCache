@@ -1,6 +1,6 @@
-package com.cache.quickcache.impl;
+package com.cache.gocache.impl;
 
-import com.cache.quickcache.*;
+import com.cache.gocache.*;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;

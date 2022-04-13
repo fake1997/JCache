@@ -34,7 +34,7 @@ public class BigCache<K> implements ICache<K> {
     public static final int MAX_VALUE_LENGTH = 4 * 1024 * 1024;
 
     /** the hit counter */
-    protected AtomicLong hitCount = new AtomicLong(0);
+    protected AtomicLong hitCounter = new AtomicLong(0);
 
     /** The miss counter. */
     protected AtomicLong missCounter = new AtomicLong();
@@ -115,37 +115,95 @@ public class BigCache<K> implements ICache<K> {
         }
 
         writeLock(key);
+        try{
+            CacheValueWrapper wrapper = pointerMap.get(key);
+            Pointer newPointer;
 
+            if(wrapper == null){
+                wrapper = new CacheValueWrapper();
+                newPointer = storageManager.store(value);
+            } else {
+                Pointer oldPointer = wrapper.getPointer();
+                newPointer = storageManager.update(oldPointer, value);
+                usedSize.addAndGet(oldPointer.getLength() * -1);
+            }
+            wrapper.setPointer(newPointer);
+            wrapper.setTimeToIdle(tti);
+            wrapper.setLastAccessTime(System.currentTimeMillis());
+            usedSize.addAndGet(newPointer.getLength());
+            pointerMap.put(key, wrapper);
+        } finally {
+            writeUnlock(key);
+        }
     }
 
     @Override
     public byte[] get(K key) throws IOException {
-        return new byte[0];
+        getCounter.incrementAndGet();
+        readLock(key);
+        try {
+            CacheValueWrapper wrapper = pointerMap.get(key);
+            if(wrapper == null){
+                missCounter.incrementAndGet();
+                return null;
+            }
+            synchronized (wrapper){
+                if(!wrapper.isExpired()){
+                    hitCounter.incrementAndGet();
+                    wrapper.setLastAccessTime(System.currentTimeMillis());
+                    return storageManager.retrieve(wrapper.getPointer());
+                }else {
+                    missCounter.incrementAndGet();
+                    return null;
+                }
+
+            }
+        } finally {
+            readUnlock(key);
+        }
     }
 
     @Override
     public byte[] delete(K key) throws IOException {
-        return new byte[0];
+        deleteCounter.incrementAndGet();
+        writeLock(key);
+        try {
+            CacheValueWrapper wrapper = pointerMap.get(key);
+            if(wrapper != null){
+                byte[] payload = storageManager.remove(wrapper.getPointer());
+                pointerMap.remove(key);
+                usedSize.addAndGet(-1*payload.length);
+                return payload;
+            }
+        }finally {
+            writeUnlock(key);
+        }
+        return null;
     }
 
     @Override
     public boolean contains(K key) throws IOException {
-        return false;
+        return pointerMap.contains(key);
     }
 
     @Override
     public void clear() {
+        this.storageManager.free();
 
+        this.pointerMap.clear();
+        this.usedSize.set(0);
     }
 
     @Override
     public double hitRate() {
-        return 0;
+        return 1.0 * hitCounter.get() / (hitCounter.get() + missCounter.get());
     }
 
     @Override
     public void close() throws IOException {
-
+        this.clear();
+        this.ses.shutdownNow();
+        this.storageManager.close();
     }
 
     private ReadWriteLock getLock(K key) {
@@ -172,6 +230,9 @@ public class BigCache<K> implements ICache<K> {
         return pointerMap.size();
     }
 
+    public double hitRatio() {
+        return 1.0 * hitCounter.get() / (hitCounter.get() + missCounter.get());
+    }
 
     abstract static class CacheDaemonWorker<K> implements Runnable{
         private WeakReference<BigCache<K>> cacheHolder;
@@ -260,6 +321,18 @@ public class BigCache<K> implements ICache<K> {
         }
     }
 
+    /**
+     * Get the latest stats of the cache.
+     *
+     * @return all stats.
+     */
+    public BigCacheStats getStats() {
+        return new BigCacheStats(hitCounter.get(), missCounter.get(), getCounter.get(),
+                putCounter.get(), deleteCounter.get(), purgeCounter.get(), moveCounter.get(),
+                count(), storageManager.getUsed(), storageManager.getDirty(),
+                storageManager.getCapacity(), storageManager.getUsedBlockCount(), storageManager.getFreeBlockCount(),
+                storageManager.getTotalBlockCount());
+    }
 
     static class CacheMerger<K> extends CacheDaemonWorker<K>{
         CacheMerger(BigCache<K> cache) {
